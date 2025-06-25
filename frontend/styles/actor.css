@@ -1,0 +1,70 @@
+#loading-message {
+    font-style: italic;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+#actor-details {
+    margin-top: 20px;
+}
+#filmography {
+    margin-top: 10px;
+}
+.movie-entry {
+    border-bottom: 1px solid #ccc;
+    padding: 8px 0;
+    cursor: pointer;
+    color: #0056b3;
+}
+.movie-entry:hover {
+    text-decoration: underline;
+}
+
+#movie-details {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+#movie-details[aria-hidden="false"] {
+    display: flex;
+}
+
+#movie-content {
+    background: white;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    color: #000;
+}
+
+#close-movie-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+#movie-poster {
+    max-width: 100%;
+    height: auto;
+    margin: 10px 0;
+    border-radius: 5px;
+}

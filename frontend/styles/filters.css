@@ -1,0 +1,16 @@
+.filters-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.filter-item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.filter-item:hover {
+    background-color: #f4f4f4;
+}

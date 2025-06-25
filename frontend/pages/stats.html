@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Statistiche Film</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+  <link rel="stylesheet" href="../styles/global.css" />
+  <link rel="stylesheet" href="../styles/navbar.css" />
+  <link rel="stylesheet" href="../styles/footer.css" />
+  <link rel="stylesheet" href="../styles/stats.css" />
+
+  <script type="module" defer src="../utils/loadNavbar.js"></script>
+  <script type="module" defer src="../utils/loadFooter.js"></script>
+  <script type="module" defer src="../utils/stats.js"></script>
+
+</head>
+<body>
+<div id="navbar-container"></div>
+
+<main class="stats-container" style="text-align: center; padding: 2rem;">
+
+  <h1>Statistiche sui Film</h1>
+
+  <!-- Menu a tendina per scegliere la statistica -->
+  <label for="statsSelect" style="font-weight: bold; font-size: 1.2rem;">Seleziona statistica:</label>
+
+  <select id="statsSelect" style="font-size: 1.1rem; padding: 0.4rem; margin-left: 1rem; min-width: 220px;">
+    <option value="">-- Scegli una statistica --</option>
+    <option value="runtime-rating">Runtime vs Rating</option>
+    <option value="top-actors">Top Attori</option>
+    <option value="languages-over-time">Lingue nel tempo</option>
+    <option value="genres-over-time">Generi nel tempo</option>
+    <option value="themes-over-time">Tematiche per decade</option>
+  </select>
+
+
+  <!-- Messaggio caricamento -->
+  <p id="loadingMessage" style="font-style: italic; margin-top: 1rem; display: none;">Caricamento dati...</p>
+  <button id="backButton" style="display:none; margin-top: 20px;">↩ Torna alla selezione</button>
+  <button id="showStatBtn" style="font-size: 1.2rem; padding: 0.5rem 1rem; margin-left: 1rem;">
+    Mostra Statistica
+  </button>
+
+  <!-- Contenitore della statistica -->
+  <div id="stats-content" style="margin-top: 2rem;"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</main>
+
+<div id="footer-container"></div>
+</body>
+</html>

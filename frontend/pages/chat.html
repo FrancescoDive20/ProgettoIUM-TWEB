@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Discussioni sui Film</title>
+
+  <link rel="stylesheet" href="/styles/global.css">
+  <link rel="stylesheet" href="/styles/navbar.css">
+  <link rel="stylesheet" href="/styles/footer.css">
+  <link rel="stylesheet" href="../styles/chat.css">
+
+  <script type="module" defer src="/utils/loadNavbar.js"></script>
+  <script type="module" defer src="/utils/loadFooter.js"></script>
+</head>
+<body>
+<div id="navbar-container"></div>
+
+<h1>Chat tra Fan e Esperti</h1>
+
+<div class="room-selector">
+  <label for="rooms">Scegli una stanza:</label>
+  <select id="rooms">
+    <option value="Film">Film</option>
+    <option value="Attori">Attori</option>
+    <option value="Registi">Registi</option>
+  </select>
+  <button id="join-leave-btn" onclick="toggleRoom()">Entra</button>
+</div>
+
+<div class="chat-container">
+  <div id="chat-messages"></div>
+  <div class="chat-input-container">
+    <input type="text" id="chat-input" placeholder="Scrivi un messaggio...">
+    <button onclick="sendMessage()">Invia</button>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script src="../utils/chat.js"></script>
+
+<div id="footer-container"></div>
+</body>
+</html>

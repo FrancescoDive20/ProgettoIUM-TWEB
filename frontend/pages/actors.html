@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <title>Dettagli Attore</title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/navbar.css" />
+    <link rel="stylesheet" href="/styles/footer.css" />
+    <link rel="stylesheet" href="/styles/actor.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module" defer src="/utils/api.js"></script>
+    <script type="module" defer src="/utils/actors.js"></script>
+    <script type="module" defer src="/utils/toggle.js"></script>
+    <script type="module" defer src="/utils/loadNavbar.js"></script>
+    <script type="module" defer src="/utils/loadFooter.js"></script>
+
+</head>
+<body>
+<div id="navbar-container"></div>
+
+<main>
+    <h1>Ricerca Attore</h1>
+    <input type="text" id="actor-name-input" placeholder="Inserisci nome attore..." />
+    <button id="search-button">Cerca</button>
+    <div id="loading-message" style="margin-top:10px; color: #555; display:none;">Ricerca attore in corso...</div>
+
+    <div id="error-message" style="color: red; margin-top: 10px;"></div>
+
+    <div id="actor-details" style="display:none;">
+        <h2 id="actor-name"></h2>
+
+        <h3>Voto medio</h3>
+        <p id="average-rating" style="font-weight:bold; font-size:1.2em;"></p>
+
+        <h3>Premi Oscar</h3>
+        <ul id="oscar-list" style="list-style-type: disc; margin-left: 20px; color: darkgreen;"></ul>
+        <div id="oscar-pagination" style="margin-top: 10px;"></div>
+
+        <h3>Paesi di uscita più frequenti</h3>
+        <ul id="countries-list" style="list-style-type: disc; margin-left: 20px; color: darkblue;"></ul>
+
+        <h3>Filmografia</h3>
+        <div id="filmography"></div>
+        <div id="pagination-controls" style="margin: 20px 0; text-align: center;"></div>
+    </div>
+
+    <div id="movie-details" tabindex="-1" aria-hidden="true">
+        <div id="movie-content" role="dialog" aria-modal="true" aria-labelledby="movie-title">
+            <button id="close-movie-btn" aria-label="Chiudi dettagli film">✕</button>
+            <h2 id="movie-title"></h2>
+            <p><strong>Studios:</strong> <span id="movie-studios"></span></p>
+            <img id="movie-poster" alt="Poster del film" />
+
+            <div>
+                <button class="toggle-section" data-toggle-target="description-content">Mostra descrizione</button>
+                <div id="description-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-description"></p>
+                </div>
+            </div>
+
+            <p><strong>Rating:</strong> <span id="movie-rating"></span></p>
+            <p><strong>Generi:</strong> <span id="movie-genres"></span></p>
+
+            <div>
+                <button class="toggle-section" data-toggle-target="languages-content">Mostra Lingue</button>
+                <div id="languages-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-languages"></p>
+                </div>
+            </div>
+
+            <p><strong>Paese:</strong> <span id="movie-country"></span></p>
+
+            <div>
+                <button class="toggle-section" data-toggle-target="themes-content">Mostra Temi</button>
+                <div id="themes-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-themes"></p>
+                </div>
+            </div>
+
+            <h3>Cast</h3>
+            <div>
+                <button class="toggle-section" data-toggle-target="cast-content">Mostra Cast</button>
+                <div id="cast-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-cast"></p>
+                </div>
+            </div>
+
+            <h3>Crew</h3>
+            <div>
+                <button class="toggle-section" data-toggle-target="crew-content">Mostra Crew</button>
+                <div id="crew-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-crew"></p>
+                </div>
+            </div>
+
+            <h3>Uscite</h3>
+            <div>
+                <button class="toggle-section" data-toggle-target="release-content">Mostra Uscite</button>
+                <div id="release-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-releases"></p>
+                </div>
+            </div>
+
+            <h3>Premi</h3>
+            <div>
+                <button class="toggle-section" data-toggle-target="award-content">Mostra Premi</button>
+                <div id="award-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-award"></p>
+                </div>
+            </div>
+
+            <h3>Recensioni</h3>
+            <div>
+                <button class="toggle-section" data-toggle-target="reviews-content">Mostra Recensioni</button>
+                <div id="reviews-content" style="display:none; margin-top:0.5em;">
+                    <p id="movie-reviews"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+<footer id="footer-container"></footer>
+</body>
+</html>

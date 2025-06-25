@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Movie Explorer</title>
+
+    <link rel="stylesheet" href="/styles/global.css">
+    <link rel="stylesheet" href="/styles/navbar.css">
+    <link rel="stylesheet" href="/styles/footer.css">
+    <link rel="stylesheet" href="/styles/movie-card.css">
+    <link rel="stylesheet" href="/styles/chat.css">
+    <link rel="stylesheet" href="/styles/filters.css">
+
+    <script type="module" defer src="/utils/api.js"></script>
+    <script type="module" defer src="/utils/stats.js"></script>
+    <script type="module" defer src="/utils/actors.js"></script>
+    <script type="module" defer src="/utils/search.js"></script>
+    <script type="module" defer src="/film in evidenza/script.js"></script>
+    <script type="module" defer src="/utils/theme.js"></script>
+    <script type="module" defer src="/utils/navigation.js"></script>
+    <script type="module" defer src="/utils/loadNavbar.js"></script>
+    <script type="module" defer src="/utils/loadFooter.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+        }
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+        }
+
+        .detail-row {
+            margin: 5px 0;
+        }
+        .detail-label {
+            font-weight: bold;
+        }
+        .paginated-list {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        .paginated-nav {
+            margin-top: 5px;
+            text-align: center;
+        }
+        .paginated-nav button {
+            margin: 0 5px;
+        }
+        #loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #modal-loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.8);
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        #poster-details img {
+            width: 100px;
+            margin: 5px;
+        }
+        #poster-details, #release-details {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+        }
+        #poster-details h4, #release-details h4 {
+            margin-bottom: 10px;
+        }
+        #control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #eee;
+        }
+        #control-header button {
+            margin: 0 5px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<div id="navbar-container"></div>
+<!-- Main Content -->
+<main>
+    <h1>Movie Explorer</h1>
+    <!-- Sezione di ricerca -->
+    <section id="search-section">
+        <label for="search-input">Cerca un film:</label>
+        <input type="text" id="search-input" placeholder="Inserisci il nome del film">
+        <label for="date-input">Data (opzionale):</label>
+        <input type="text" id="date-input" placeholder="Inserisci la data (es. 2010)">
+        <button id="search-button">🔍 Cerca</button>
+        <!-- Indicatore di caricamento per la ricerca -->
+        <div id="loading-indicator">Caricamento in corso...</div>
+    </section>
+
+    <!-- Sezione per visualizzare le schede dei film -->
+    <section id="movie-details-section" style="display: none;">
+        <div id="movie-card" class="clearfix"></div>
+    </section>
+
+    <!-- Sezione di paginazione -->
+    <section id="pagination-section" style="display: none;">
+        <p id="pagination-info"></p>
+        <button id="prev-btn" disabled>Pagina Precedente</button>
+        <button id="next-btn" disabled>Pagina Successiva</button>
+    </section>
+</main>
+
+<!-- Template nascosto per la card del film -->
+<template id="movie-card-template">
+    <div class="movie-card" style="cursor: pointer;">
+        <h3 class="movie-title"></h3>
+        <p class="movie-date"></p>
+        <p class="movie-tagline"></p>
+        <p class="movie-description">
+            <span class="description-text"></span>
+            <span class="expand-icon" style="cursor: pointer;">🔍</span>
+        </p>
+        <p class="movie-minutes"></p>
+        <p class="movie-rating"></p>
+    </div>
+</template>
+
+<!-- Modal per mostrare i dettagli completi del film -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span id="close-modal" class="close">&times;</span>
+        <!-- Loading indicator del modal in overlay -->
+        <div id="modal-loading">Caricamento dettagli...</div>
+        <div id="full-details"></div>
+    </div>
+</div>
+
+<script type="module">
+    let currentPage = 0;
+    let allMovies = [];
+    const filmsPerPage = 10;
+
+    function showLoadingIndicator(show) {
+        document.getElementById("loading-indicator").style.display = show ? "block" : "none";
+    }
+    function showModalLoading(show) {
+        document.getElementById("modal-loading").style.display = show ? "flex" : "none";
+    }
+
+    /**
+     * Crea una lista paginata di elementi
+     * @param items
+     * @param itemsPerPage
+     * @returns {HTMLDivElement}
+     */
+    function createPaginatedList(items, itemsPerPage = 10) {
+        let currentPage = 0;
+        const totalPages = Math.ceil(items.length / itemsPerPage);
+        const container = document.createElement('div');
+        const listEl = document.createElement('ul');
+        listEl.className = "paginated-list";
+        const navEl = document.createElement('div');
+        navEl.className = "paginated-nav";
+
+        function render() {
+            listEl.innerHTML = "";
+            const start = currentPage * itemsPerPage;
+            const end = start + itemsPerPage;
+            items.slice(start, end).forEach(item => {
+                const li = document.createElement('li');
+                li.innerText = item;
+                listEl.appendChild(li);
+            });
+            navEl.innerHTML = "";
+            if (totalPages > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.innerText = "Precedente";
+                prevBtn.disabled = currentPage === 0;
+                prevBtn.addEventListener('click', () => {
+                    currentPage--;
+                    render();
+                });
+
+                const nextBtn = document.createElement('button');
+                nextBtn.innerText = "Successiva";
+                nextBtn.disabled = currentPage >= totalPages - 1;
+                nextBtn.addEventListener('click', () => {
+                    currentPage++;
+                    render();
+                });
+
+                navEl.appendChild(prevBtn);
+                navEl.appendChild(document.createTextNode(` Pagina ${currentPage + 1} di ${totalPages} `));
+                navEl.appendChild(nextBtn);
+            }
+        }
+        render();
+        container.appendChild(listEl);
+        container.appendChild(navEl);
+        return container;
+    }
+
+
+    /**
+     * Fetch movie by name and date from the API
+     * @param name
+     * @param date
+     * @returns {Promise<string|DocumentFragment|*[]>}
+     */
+    async function fetchMovieByName(name, date = "") {
+        try {
+            showLoadingIndicator(true);
+            const url = `http://localhost:3000/postgres/movie?name=${encodeURIComponent(name)}&date=${encodeURIComponent(date)}&page=0&size=1000`;
+            console.log("Chiamata all'endpoint:", url);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("Errore nella ricerca del film");
+            }
+            const data = await response.json();
+            console.log("Risposta JSON:", data);
+            showLoadingIndicator(false);
+            const results = data?.content?.content ?? [];
+            if (results.length > 0) return results;
+            throw new Error("Film non trovato");
+        } catch (error) {
+            showLoadingIndicator(false);
+            console.error("Errore in fetchMovieByName:", error);
+            return [];
+        }
+    }
+
+    function truncateDescription(description, wordLimit) {
+        const words = description.split(' ');
+        if (words.length > wordLimit) {
+            return words.slice(0, wordLimit).join(' ') + '...';
+        }
+        return description;
+    }
+
+    function getFallback(key) {
+        switch(key) {
+            case "movie": return {};
+            case "actors": return [];
+            case "country": return "N/A";
+            case "crew": return [];
+            case "genres": return [];
+            case "prize": return [];
+            case "studios": return [];
+            case "themes": return [];
+            default: return null;
+        }
+    }
+
+    /**
+     * Apre il modal con i dettagli completi del film
+     * @param movieId
+     * @returns {Promise<void>}
+     */
+    async function openMovieDetails(movieId) {
+        try {
+            showModalLoading(true);
+
+            const movieResponse = await fetch(`http://localhost:3000/postgres/movies/${movieId}`);
+            if (!movieResponse.ok) throw new Error("Errore nel recupero dei dettagli del film");
+            const movieData = await movieResponse.json();
+
+            const dataMap = { movie: movieData };
+
+            const prizeEndpoint = {
+                key: "prize",
+                url: `http://localhost:3000/postgres/awards/movies/${encodeURIComponent(movieData.name)}/${movieData.date}`
+            };
+            const endpoints = [
+                { key: "actors", url: `http://localhost:3000/postgres/actors/movie/${movieId}` },
+                { key: "country", url: `http://localhost:3000/postgres/countries/movies/${movieId}` },
+                { key: "crew", url: `http://localhost:3000/postgres/crew/movies/${movieId}` },
+                { key: "genres", url: `http://localhost:3000/postgres/genre/movies/${movieId}` },
+                { key: "studios", url: `http://localhost:3000/postgres/studios/movies/${movieId}` },
+                { key: "themes", url: `http://localhost:3000/postgres/themes/movies/${movieId}` },
+                prizeEndpoint,
+                { key: "releases", url: `http://localhost:3000/mongodb/releases/${movieId}` }, // Endpoint per le release
+                { key: "posters", url: `http://localhost:3000/mongodb/posters/${movieId}` }    // Endpoint per i poster
+            ];
+
+            const results = await Promise.allSettled(
+                endpoints.map(item => fetch(item.url))
+            );
+
+            for (let i = 0; i < results.length; i++) {
+                const key = endpoints[i].key;
+                if (results[i].status === "fulfilled") {
+                    try {
+                        dataMap[key] = await results[i].value.json();
+                    } catch (e) {
+                        console.error(`Errore nel parsing JSON per ${key}:`, e);
+                        dataMap[key] = getFallback(key);
+                    }
+                } else {
+                    console.warn(`Endpoint ${key} non raggiungibile, uso fallback`);
+                    dataMap[key] = getFallback(key);
+                }
+            }
+
+            showModalLoading(false);
+
+            const fullDetails = {
+                ...dataMap.movie,
+                actors: dataMap.actors || [],
+                country: dataMap.country || "",
+                crew: dataMap.crew || [],
+                genres: dataMap.genres || [],
+                prize: dataMap.prize || [],
+                studios: dataMap.studios || [],
+                themes: dataMap.themes || [],
+                releases: dataMap.releases || [],
+                posters: dataMap.posters || []
+            };
+            console.log("Dati posters:", dataMap.posters);
+
+            const fullDetailsDiv = document.getElementById("full-details");
+            fullDetailsDiv.innerHTML = "";
+
+            if (movieData.link) {
+                const posterContainer = document.createElement("div");
+                posterContainer.className = "poster-container";
+                const img = document.createElement("img");
+                img.src = movieData.link; // Usa il link diretto
+                img.alt = "Poster del film";
+                img.style.maxWidth = "100%";
+                img.style.height = "auto";
+                posterContainer.appendChild(img);
+                fullDetailsDiv.appendChild(posterContainer);
+            } else if (Array.isArray(fullDetails.posters) && fullDetails.posters.length > 0) {
+                const posterContainer = document.createElement("div");
+                posterContainer.className = "poster-container";
+                const img = document.createElement("img");
+                img.src = fullDetails.posters[0].link;
+                img.alt = "Poster del film";
+                img.style.maxWidth = "100%";
+                img.style.height = "auto";
+                posterContainer.appendChild(img);
+                fullDetailsDiv.appendChild(posterContainer);
+            }
+
+            function createDetailRow(label, value) {
+                if (!value || value === "N/A" || value === "N/D") return null;
+                const p = document.createElement("p");
+                p.className = "detail-row";
+                p.innerHTML = `<span class="detail-label">${label}:</span> ${value}`;
+                return p;
+            }
+
+            const fields = [
+                { label: "Nome", value: fullDetails.name },
+                { label: "Data di uscita", value: fullDetails.date },
+                { label: "Tagline", value: fullDetails.tagline },
+                { label: "Descrizione", value: fullDetails.description },
+                { label: "Durata", value: fullDetails.minutes ? fullDetails.minutes + " min" : "" },
+                { label: "Rating", value: fullDetails.rating ? fullDetails.rating + "/10" : "" }
+            ];
+            fields.forEach(field => {
+                const row = createDetailRow(field.label, field.value);
+                if (row) fullDetailsDiv.appendChild(row);
+            });
+
+            if (Array.isArray(fullDetails.actors) && fullDetails.actors.length > 0) {
+                const actorsContainer = document.createElement("div");
+                actorsContainer.className = "actors-section";
+                const actorsHeader = document.createElement("h4");
+                actorsHeader.innerText = "Attori per ruolo:";
+                actorsContainer.appendChild(actorsHeader);
+
+                const actorsByRole = fullDetails.actors.reduce((acc, actor) => {
+                    const role = actor.role || "Senza ruolo";
+                    if (!acc[role]) acc[role] = [];
+                    acc[role].push(actor);
+                    return acc;
+                }, {});
+
+                const actorsSelect = document.createElement("select");
+                const defaultOptionActors = document.createElement("option");
+                defaultOptionActors.value = "";
+                defaultOptionActors.innerText = "Seleziona un ruolo";
+                actorsSelect.appendChild(defaultOptionActors);
+                Object.keys(actorsByRole).forEach(role => {
+                    const option = document.createElement("option");
+                    option.value = role;
+                    option.innerText = role;
+                    actorsSelect.appendChild(option);
+                });
+                actorsContainer.appendChild(actorsSelect);
+
+                const actorsListContainer = document.createElement("div");
+                actorsListContainer.className = "actors-list";
+                actorsContainer.appendChild(actorsListContainer);
+
+                actorsSelect.addEventListener("change", () => {
+                    const selectedRole = actorsSelect.value;
+                    actorsListContainer.innerHTML = "";
+                    if (selectedRole && actorsByRole[selectedRole]) {
+                        const ul = document.createElement("ul");
+                        actorsByRole[selectedRole].forEach(actor => {
+                            const li = document.createElement("li");
+                            li.innerText = actor.name;
+                            ul.appendChild(li);
+                        });
+                        actorsListContainer.appendChild(ul);
+                    }
+                });
+                fullDetailsDiv.appendChild(actorsContainer);
+            }
+
+            if (Array.isArray(fullDetails.crew) && fullDetails.crew.length > 0) {
+                const crewContainer = document.createElement("div");
+                crewContainer.className = "crew-section";
+                const crewHeader = document.createElement("h4");
+                crewHeader.innerText = "Crew per ruolo:";
+                crewContainer.appendChild(crewHeader);
+
+                const crewByRole = fullDetails.crew.reduce((acc, member) => {
+                    const role = member.role || "Senza ruolo";
+                    if (!acc[role]) acc[role] = [];
+                    acc[role].push(member);
+                    return acc;
+                }, {});
+
+                const crewSelect = document.createElement("select");
+                const defaultOptionCrew = document.createElement("option");
+                defaultOptionCrew.value = "";
+                defaultOptionCrew.innerText = "Seleziona un ruolo";
+                crewSelect.appendChild(defaultOptionCrew);
+                Object.keys(crewByRole).forEach(role => {
+                    const option = document.createElement("option");
+                    option.value = role;
+                    option.innerText = role;
+                    crewSelect.appendChild(option);
+                });
+                crewContainer.appendChild(crewSelect);
+
+                const crewListContainer = document.createElement("div");
+                crewListContainer.className = "crew-list";
+                crewContainer.appendChild(crewListContainer);
+
+                crewSelect.addEventListener("change", () => {
+                    const selectedRole = crewSelect.value;
+                    crewListContainer.innerHTML = "";
+                    if (selectedRole && crewByRole[selectedRole]) {
+                        const ul = document.createElement("ul");
+                        crewByRole[selectedRole].forEach(member => {
+                            const li = document.createElement("li");
+                            li.innerText = member.name;
+                            ul.appendChild(li);
+                        });
+                        crewListContainer.appendChild(ul);
+                    }
+                });
+                fullDetailsDiv.appendChild(crewContainer);
+            }
+
+            if (Array.isArray(fullDetails.releases) && fullDetails.releases.length > 0) {
+                const releasesByNation = fullDetails.releases.reduce((acc, release) => {
+                    const nation = release.country || "Sconosciuto";
+                    if (!acc[nation]) {
+                        acc[nation] = [];
+                    }
+                    acc[nation].push(release);
+                    return acc;
+                }, {});
+
+                // Crea un contenitore per l'intera sezione release
+                const releaseContainer = document.createElement("div");
+                releaseContainer.className = "release-section";
+
+                const releaseHeader = document.createElement("h4");
+                releaseHeader.innerText = "Release per nazione:";
+                releaseContainer.appendChild(releaseHeader);
+
+                // Crea il menù a tendina per selezionare la nazione
+                const releaseSelect = document.createElement("select");
+                const defaultOptionRelease = document.createElement("option");
+                defaultOptionRelease.value = "";
+                defaultOptionRelease.innerText = "Seleziona una nazione";
+                releaseSelect.appendChild(defaultOptionRelease);
+
+                Object.keys(releasesByNation).forEach(nation => {
+                    const option = document.createElement("option");
+                    option.value = nation;
+                    option.innerText = nation;
+                    releaseSelect.appendChild(option);
+                });
+                releaseContainer.appendChild(releaseSelect);
+
+                // Crea un contenitore per mostrare la lista delle release (date)
+                const releaseListContainer = document.createElement("div");
+                releaseListContainer.className = "release-list";
+                releaseContainer.appendChild(releaseListContainer);
+
+                // Aggiorna la lista quando l'utente seleziona una nazione
+                releaseSelect.addEventListener("change", () => {
+                    const selectedNation = releaseSelect.value;
+                    releaseListContainer.innerHTML = "";
+                    if (selectedNation && releasesByNation[selectedNation]) {
+                        const ul = document.createElement("ul");
+                        releasesByNation[selectedNation].forEach(release => {
+                            const li = document.createElement("li");
+                            // Formatta la data in formato YYYY-MM-DD
+                            li.innerText = new Date(release.date).toISOString().slice(0, 10);
+                            ul.appendChild(li);
+                        });
+                        releaseListContainer.appendChild(ul);
+                    }
+                });
+                fullDetailsDiv.appendChild(releaseContainer);
+            } else {
+                const releaseDetailsDiv = document.createElement("div");
+                releaseDetailsDiv.innerHTML = "<p>Nessuna release trovata.</p>";
+                fullDetailsDiv.appendChild(releaseDetailsDiv);
+            }
+
+
+            const countryRow = createDetailRow("Paese", fullDetails.country);
+            if (countryRow) fullDetailsDiv.appendChild(countryRow);
+
+            if (Array.isArray(fullDetails.prize) && fullDetails.prize.length > 0) {
+                const prizeContainer = document.createElement("div");
+                prizeContainer.className = "prize-section";
+                const prizeHeader = document.createElement("h4");
+                prizeHeader.innerText = "Premi:";
+                prizeContainer.appendChild(prizeHeader);
+
+                const prizeSelect = document.createElement("select");
+                const defaultOptionPrize = document.createElement("option");
+                defaultOptionPrize.value = "";
+                defaultOptionPrize.innerText = "Seleziona tipo premio";
+                prizeSelect.appendChild(defaultOptionPrize);
+
+                const winners = fullDetails.prize.filter(prize => prize.winner === true);
+                const nominees = fullDetails.prize.filter(prize => prize.winner === false);
+
+                if (winners.length > 0) {
+                    const optionWinner = document.createElement("option");
+                    optionWinner.value = "winner";
+                    optionWinner.innerText = "Vincitore";
+                    prizeSelect.appendChild(optionWinner);
+                }
+                if (nominees.length > 0) {
+                    const optionNominee = document.createElement("option");
+                    optionNominee.value = "nominee";
+                    optionNominee.innerText = "Candidato";
+                    prizeSelect.appendChild(optionNominee);
+                }
+                prizeContainer.appendChild(prizeSelect);
+
+                const prizeListContainer = document.createElement("div");
+                prizeListContainer.className = "prize-list";
+                prizeContainer.appendChild(prizeListContainer);
+
+                prizeSelect.addEventListener("change", () => {
+                    const selectedType = prizeSelect.value;
+                    prizeListContainer.innerHTML = "";
+                    let selectedPrizes = [];
+                    if (selectedType === "winner") {
+                        selectedPrizes = winners;
+                    } else if (selectedType === "nominee") {
+                        selectedPrizes = nominees;
+                    }
+                    if (selectedPrizes.length > 0) {
+                        const ul = document.createElement("ul");
+                        selectedPrizes.forEach(prize => {
+                            const li = document.createElement("li");
+                            li.innerText = `${prize.name} - ${prize.category}`;
+                            ul.appendChild(li);
+                        });
+                        prizeListContainer.appendChild(ul);
+                    }
+                });
+
+                fullDetailsDiv.appendChild(prizeContainer);
+            }
+
+            // Mostra il modal
+            document.getElementById("modal").style.display = "block";
+        } catch (error) {
+            console.error("Errore in openMovieDetails:", error);
+            alert("Errore nel recupero dei dettagli del film.");
+        }
+    }
+
+    // Chiude il modal
+    document.getElementById("close-modal").addEventListener("click", () => {
+        document.getElementById("modal").style.display = "none";
+    });
+
+
+
+
+    // Funzione per visualizzare i film (client-side, paginati)
+    function displayMovies(moviesArray) {
+        const detailsSection = document.getElementById("movie-details-section");
+        const movieCardTemplate = document.getElementById("movie-card-template");
+
+        if (!detailsSection) {
+            console.error("Elemento #movie-details-section non trovato nel DOM.");
+            return;
+        }
+
+        detailsSection.innerHTML = ""; // Pulisce la sezione
+
+        // Calcola gli indici per la pagina corrente
+        const start = currentPage * filmsPerPage;
+        const end = start + filmsPerPage;
+        const moviesToDisplay = moviesArray.slice(start, end);
+
+        if (moviesToDisplay.length > 0) {
+            console.log("Film visualizzati:", moviesToDisplay.map(movie => movie.name));
+            moviesToDisplay.forEach(movie => {
+                const movieCard = movieCardTemplate.content.cloneNode(true);
+                const movieCardElement = movieCard.querySelector(".movie-card");
+
+                movieCardElement.querySelector(".movie-title").innerText = movie.name;
+                if (movie.date) {
+                    movieCardElement.querySelector(".movie-date").innerText = `Data di uscita: ${movie.date}`;
+                }
+                if (movie.tagline) {
+                    movieCardElement.querySelector(".movie-tagline").innerText = `Tagline: ${movie.tagline}`;
+                }
+                if (movie.description) {
+                    const truncatedDescription = truncateDescription(movie.description, 50);
+                    const descriptionSpan = movieCardElement.querySelector(".description-text");
+                    descriptionSpan.innerText = truncatedDescription;
+                    const expandIcon = movieCardElement.querySelector(".expand-icon");
+                    if (truncatedDescription !== movie.description) {
+                        expandIcon.style.display = 'inline';
+                        expandIcon.addEventListener("click", (event) => {
+                            event.stopPropagation();
+                            alert(movie.description);
+                        });
+                    } else {
+                        expandIcon.style.display = 'none';
+                    }
+                }
+                if (movie.minutes) {
+                    movieCardElement.querySelector(".movie-minutes").innerText = `Durata: ${movie.minutes} min`;
+                }
+                if (movie.rating) {
+                    movieCardElement.querySelector(".movie-rating").innerText = `Rating: ${movie.rating}/10`;
+                }
+
+                movieCardElement.setAttribute("data-movie-id", movie.id);
+                movieCardElement.addEventListener("click", () => openMovieDetails(movie.id));
+
+                detailsSection.appendChild(movieCardElement);
+            });
+        } else {
+            detailsSection.innerHTML = "<p>Nessun film trovato.</p>";
+        }
+        detailsSection.style.display = "block";
+    }
+
+    /**
+     * Aggiorna i controlli di paginazione in base alla pagina corrente e al numero totale di film
+     */
+    function updatePaginationControls() {
+        const totalMoviesCount = allMovies.length;
+        const totalPages = Math.ceil(totalMoviesCount / filmsPerPage);
+        const pageInfoElement = document.getElementById('pagination-info');
+        const prevButton = document.getElementById('prev-btn');
+        const nextButton = document.getElementById('next-btn');
+
+        pageInfoElement.innerText = `Pagina ${currentPage + 1} di ${totalPages}`;
+        prevButton.disabled = currentPage === 0;
+        nextButton.disabled = currentPage >= totalPages - 1;
+        document.getElementById("pagination-section").style.display = totalPages > 1 ? "block" : "none";
+    }
+
+    /**
+     * Gestisce la ricerca dei film in base al nome e alla data
+     * @returns {Promise<void>}
+     */
+    async function handleSearch() {
+        const name = document.getElementById("search-input").value.trim();
+        if (!name) {
+            alert("Inserisci il nome del film.");
+            return;
+        }
+        const date = document.getElementById("date-input").value.trim();
+        try {
+            allMovies = await fetchMovieByName(name, date);
+            currentPage = 0; // Inizia dalla prima pagina
+            displayMovies(allMovies);
+            updatePaginationControls();
+        } catch (error) {
+            alert("Errore durante la ricerca.");
+        }
+    }
+
+    /**
+     * Naviga alla pagina specificata
+     * @param pageNumber
+     */
+    function goToPage(pageNumber) {
+        const totalPages = Math.ceil(allMovies.length / filmsPerPage);
+        if (pageNumber < 0 || pageNumber >= totalPages) return;
+        currentPage = pageNumber;
+        displayMovies(allMovies);
+        updatePaginationControls();
+    }
+
+    // Eventi di ricerca
+    document.getElementById("search-button").addEventListener("click", handleSearch);
+    document.getElementById("search-input").addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            handleSearch();
+        }
+    });
+
+    // Eventi di paginazione
+    document.getElementById("prev-btn").addEventListener("click", () => goToPage(currentPage - 1));
+    document.getElementById("next-btn").addEventListener("click", () => goToPage(currentPage + 1));
+
+    // Carica la navbar e inizializza il tema all'avvio
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            loadNavbar();
+            initTheme();
+        } catch (error) {
+            console.error("Errore durante il caricamento della pagina:", error);
+        }
+    });
+
+    document.getElementById("back-button").addEventListener("click", () => {
+        window.history.back();
+    });
+
+    document.getElementById("high-contrast-button").addEventListener("click", () => {
+        document.body.classList.toggle("high-contrast");
+    });
+    document.getElementById("dark-mode-button").addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+    });
+
+    document.getElementById("date-input").addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            handleSearch();
+        }
+    });
+</script>
+<div id="footer-container"></div>
+</body>
+</html>

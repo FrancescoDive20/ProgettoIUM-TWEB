@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Navbar - Movie Explorer</title>
+  <link rel="stylesheet" href="/styles/navbar.css">
+
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-links">
+    <a href="http://localhost:63343/frontend/index.html">🏠 Home</a>
+    <a href="http://localhost:63343/frontend/pages/actors.html">🎬 Actors</a>
+    <a href="http://localhost:63343/frontend/pages/stats.html">🎥 Stats</a>
+    <a href="http://localhost:63343/frontend/pages/chat.html">💬 Chat</a>
+  </div>
+  <div class="accessibility-controls">
+    <button id="back-button">← Indietro</button>
+    <button id="high-contrast-toggle">High Contrast</button>
+    <button id="dark-mode-toggle">Dark Mode</button>
+  </div>
+</nav>
+
+<script>
+  const currentURL = window.location.href;
+  if (currentURL.indexOf("index.html") !== -1 || currentURL.endsWith("/")) {
+    document.getElementById("back-button").style.display = "none";
+  } else {
+    document.getElementById("back-button").addEventListener("click", () => {
+      // Se c'è una pagina precedente, torna indietro, altrimenti reindirizza alla Home
+      if (document.referrer) {
+        window.history.back();
+      } else {
+        window.location.href = "http://localhost:63343/frontend/index.html";
+      }
+    });
+  }
+
+  // Funzionalità per High Contrast:
+  document.getElementById("high-contrast-toggle").addEventListener("click", () => {
+    document.body.classList.toggle("high-contrast");
+    // Rimuovi eventuale dark-mode se presente
+    document.body.classList.remove("dark-mode");
+    // Salva la scelta nel localStorage
+    if (document.body.classList.contains("high-contrast")) {
+      localStorage.setItem("theme", "high-contrast");
+    } else {
+      localStorage.removeItem("theme");
+    }
+  });
+
+  // Funzionalità per Dark Mode:
+  document.getElementById("dark-mode-toggle").addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    // Rimuovi eventuale high-contrast se presente
+    document.body.classList.remove("high-contrast");
+    // Salva la scelta nel localStorage
+    if (document.body.classList.contains("dark-mode")) {
+      localStorage.setItem("theme", "dark-mode");
+    } else {
+      localStorage.removeItem("theme");
+    }
+  });
+
+  // Applica il tema salvato al caricamento della pagina
+  window.addEventListener("load", () => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+    }
+  });
+</script>
+</body>
+</html>

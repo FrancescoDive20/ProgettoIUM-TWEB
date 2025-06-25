@@ -1,0 +1,64 @@
+.navbar {
+    width: 100%;
+    background-color: #333;
+    padding: 10px 20px;  /
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    white-space: nowrap;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+    background-color: #444;
+}
+
+.accessibility-controls {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    min-width: 240px;
+    flex-shrink: 0;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.accessibility-controls button {
+    font-size: 1rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #444;
+    color: white;
+    border: none;
+    transition: background-color 0.3s;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.accessibility-controls button:hover {
+    background-color: #666;
+}
+
+#back-button[style*="display: none"] {
+    display: none !important;
+}

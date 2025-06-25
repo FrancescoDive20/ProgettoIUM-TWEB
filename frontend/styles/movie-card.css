@@ -1,0 +1,32 @@
+.movie-card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.movie-card h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.movie-card p {
+    margin: 5px 0;
+}
+
+.movie-card .expand-icon {
+    cursor: pointer;
+    color: blue;
+    font-size: 1.2em;
+}
+
+.movie-card .description-text {
+    display: inline-block;
+    max-width: 90%;
+    word-wrap: break-word;
+}
+
+.movie-card .description-text.expanded {
+    white-space: normal;
+}

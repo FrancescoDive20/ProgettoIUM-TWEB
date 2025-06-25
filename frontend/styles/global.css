@@ -1,0 +1,163 @@
+html, body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    color: black;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+button {
+    cursor: pointer;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #ff5722;
+    color: white;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+button:hover {
+    background-color: #e64a19;
+    transform: scale(1.05);
+}
+
+button:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+}
+
+body.dark-mode {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+.dark-mode .movie-card {
+    background-color: #222;
+    color: #ddd;
+}
+
+.dark-mode .modal-content {
+    background-color: #222 !important; /* Sfondo scuro */
+    color: #ffffff !important; /* Testo bianco */
+    border: 2px solid #444; /* Bordo per separarlo meglio */
+}
+
+.dark-mode .modal-content button {
+    background-color: #ff784e;
+    color: black;
+}
+
+.dark-mode .modal-content button:hover {
+    background-color: #ff5722;
+}
+
+.dark-mode .modal-content a {
+    color: #ffcc00; /* Giallo per maggiore visibilità */
+    text-decoration: underline;
+}
+
+.dark-mode .navbar {
+    background-color: #333;
+    border-bottom: 1px solid #444;
+}
+
+.dark-mode button {
+    background-color: #ff784e;
+    color: black;
+}
+
+.dark-mode button:hover {
+    background-color: #ff5722;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #ddd 25%, #eee 50%, #ddd 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+body.high-contrast {
+    background-color: black;
+    color: yellow;
+}
+
+.high-contrast a {
+    color: cyan;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.high-contrast .navbar {
+    background-color: black;
+    border-bottom: 2px solid yellow;
+}
+
+.high-contrast button {
+    background-color: yellow;
+    color: black;
+    border: 2px solid black;
+}
+
+.high-contrast button:hover {
+    background-color: orange;
+    color: black;
+}
+
+.high-contrast .movie-card,
+.high-contrast .modal-content {
+    background-color: black !important;
+    color: yellow !important;
+    border: 2px solid yellow; /* Bordo per migliorare la visibilità */
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.navigation-buttons button {
+    padding: 12px;
+    font-size: 16px;
+}
+
+.back-button-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#back-button {
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#back-button:hover {
+    background-color: #e64a19;
+}
+
